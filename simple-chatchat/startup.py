@@ -107,7 +107,13 @@ def run_openai_api(log_level: str = "INFO", started_event: mp.Event = None):
 def run_model_worker():
 
 
-def run_api_server():
+def run_api_server(started_event: mp.Event = None):
+    from server.api import create_app
+    import uvicorn
+    from server.utils import set_httpx_config
+    set_httpx_config()
+
+    
 
 
 def run_webui():

@@ -1,9 +1,27 @@
 from fastapi import FastAPI
 from pathlib import Path
 
+import pydantic
+from pydantic import BaseModel
+
 from configs import (HTTPX_DEFAULT_TIMEOUT, MODEL_PATH, MODEL_ROOT_PATH)
 
-from typing import Union, Dict
+from typing import Union, Dict, Any
+
+
+class BaseResponse(BaseModel):
+    code: int = pydantic.Field(200, description="API status code")
+    msg: str = pydantic.Field("success", description="API status message")
+    data: Any = pydantic.Field(None, description="API data")
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "code": 200,
+                "msg": "success",
+            }
+        }
+
 
 def get_model_path(model_name: str, type: str = None) -> Optional[str]:
     if type in MODEL_PATH:

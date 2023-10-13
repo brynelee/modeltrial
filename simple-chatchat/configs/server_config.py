@@ -1,3 +1,9 @@
+
+
+# API 是否开启跨域，默认为False，如果需要开启，请设置为True
+# is open cross domain
+OPEN_CROSS_DOMAIN = False
+
 DEFAULT_BIND_HOST = "127.0.0.1"
 
 # httpx 请求默认超时时间（秒）。如果加载模型或对话较慢，出现超时错误，可以适当加大该值。
