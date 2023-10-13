@@ -1,7 +1,8 @@
 from modelscope import AutoModelForCausalLM, AutoTokenizer, snapshot_download
 from modelscope import GenerationConfig
 
-model_dir = snapshot_download('qwen/Qwen-14B-Chat-Int4', revision='v1.0.4')
+# model_dir = snapshot_download('qwen/Qwen-14B-Chat-Int4', revision='v1.0.4')
+model_dir = 'D:\\AI_Spaces\\models\\Qwen-14B-Chat-Int4' # for xdserver local model position
 
 # Note: The default behavior now has injection attack prevention off.
 tokenizer = AutoTokenizer.from_pretrained(model_dir, trust_remote_code=True)
