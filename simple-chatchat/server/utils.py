@@ -4,9 +4,9 @@ from pathlib import Path
 import pydantic
 from pydantic import BaseModel
 
-from configs import (HTTPX_DEFAULT_TIMEOUT, MODEL_PATH, MODEL_ROOT_PATH)
+from configs import (HTTPX_DEFAULT_TIMEOUT, MODEL_PATH, MODEL_ROOT_PATH, EMBEDDING_DEVICE, LLM_DEVICE)
 
-from typing import Union, Dict, Any
+from typing import Union, Dict, Any, Literal
 
 
 class BaseResponse(BaseModel):
@@ -223,3 +223,29 @@ def set_httpx_config(
 
     # import urllib.request
     # urllib.request.getproxies = _get_proxies
+
+# 自动检查torch可用的设备。分布式部署时，不运行LLM的机器上可以不装torch
+def detect_device() -> Literal["cuda", "mps", "cpu"]:
+    try:
+        import torch
+        if torch.cuda.is_available():
+            return "cuda"
+        if torch.backends.mps.is_available():
+            return "mps"
+    except:
+        pass
+    return "cpu"
+
+
+def llm_device(device: str = None) -> Literal["cuda", "mps", "cpu"]:
+    device = device or LLM_DEVICE
+    if device not in ["cuda", "mps", "cpu"]:
+        device = detect_device()
+    return device
+
+
+def embedding_device(device: str = None) -> Literal["cuda", "mps", "cpu"]:
+    device = device or EMBEDDING_DEVICE
+    if device not in ["cuda", "mps", "cpu"]:
+        device = detect_device()
+    return device

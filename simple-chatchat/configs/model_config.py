@@ -1,4 +1,8 @@
 
+
+
+
+
 # 可以指定一个绝对路径，统一存放所有的Embedding和LLM模型。
 # 每个模型可以是一个单独的目录，也可以是某个目录下的二级子目录
 MODEL_ROOT_PATH = ""
@@ -90,5 +94,55 @@ MODEL_PATH = {
     },
 }
 
+# Embedding 模型运行设备。设为"auto"会自动检测，也可手动设定为"cuda","mps","cpu"其中之一。
+EMBEDDING_DEVICE = "auto"
+
 # LLM 运行设备。设为"auto"会自动检测，也可手动设定为"cuda","mps","cpu"其中之一。
 LLM_DEVICE = "auto"
+
+
+VLLM_MODEL_DICT = {
+    "aquila-7b":"BAAI/Aquila-7B",
+    "aquilachat-7b":"BAAI/AquilaChat-7B",
+
+    "baichuan-7b": "baichuan-inc/Baichuan-7B",
+    "baichuan-13b": "baichuan-inc/Baichuan-13B",
+    'baichuan-13b-chat':'baichuan-inc/Baichuan-13B-Chat',
+    # 注意：bloom系列的tokenizer与model是分离的，因此虽然vllm支持，但与fschat框架不兼容
+    # "bloom":"bigscience/bloom",
+    # "bloomz":"bigscience/bloomz",
+    # "bloomz-560m":"bigscience/bloomz-560m",
+    # "bloomz-7b1":"bigscience/bloomz-7b1",
+    # "bloomz-1b7":"bigscience/bloomz-1b7",
+
+    "internlm-7b":"internlm/internlm-7b",
+    "internlm-chat-7b":"internlm/internlm-chat-7b",
+    "falcon-7b":"tiiuae/falcon-7b",
+    "falcon-40b":"tiiuae/falcon-40b",
+    "falcon-rw-7b":"tiiuae/falcon-rw-7b",
+    "gpt2":"gpt2",
+    "gpt2-xl":"gpt2-xl",
+    "gpt-j-6b":"EleutherAI/gpt-j-6b",
+    "gpt4all-j":"nomic-ai/gpt4all-j",
+    "gpt-neox-20b":"EleutherAI/gpt-neox-20b",
+    "pythia-12b":"EleutherAI/pythia-12b",
+    "oasst-sft-4-pythia-12b-epoch-3.5":"OpenAssistant/oasst-sft-4-pythia-12b-epoch-3.5",
+    "dolly-v2-12b":"databricks/dolly-v2-12b",    
+    "stablelm-tuned-alpha-7b":"stabilityai/stablelm-tuned-alpha-7b",
+    "Llama-2-13b-hf":"meta-llama/Llama-2-13b-hf",    
+    "Llama-2-70b-hf":"meta-llama/Llama-2-70b-hf",
+    "open_llama_13b":"openlm-research/open_llama_13b",    
+    "vicuna-13b-v1.3":"lmsys/vicuna-13b-v1.3",
+    "koala":"young-geng/koala",    
+    "mpt-7b":"mosaicml/mpt-7b",
+    "mpt-7b-storywriter":"mosaicml/mpt-7b-storywriter",    
+    "mpt-30b":"mosaicml/mpt-30b",
+    "opt-66b":"facebook/opt-66b",    
+    "opt-iml-max-30b":"facebook/opt-iml-max-30b",
+
+    "Qwen-7B":"Qwen/Qwen-7B",
+    "Qwen-14B":"Qwen/Qwen-14B",
+    "Qwen-7B-Chat":"Qwen/Qwen-7B-Chat",
+    "Qwen-14B-Chat":"Qwen/Qwen-14B-Chat",
+
+}

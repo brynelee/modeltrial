@@ -1,5 +1,7 @@
 import asyncio
 import sys
+import os
+import subprocess
 import multiprocessing as mp
 from multiprocessing import Process
 
@@ -17,7 +19,7 @@ from configs import (
     HTTPX_DEFAULT_TIMEOUT,
 )
 
-from server.utils import (fschat_openai_api_address, fschat_controller_address, fschat_model_worker_address, FastAPI, MakeFastAPIOffline)
+from server.utils import (fschat_openai_api_address, fschat_controller_address, fschat_model_worker_address, FastAPI, MakeFastAPIOffline, get_model_worker_config)
 
 from typing import List
 
@@ -37,6 +39,114 @@ def create_controller_app(
     app.title = "FastChat Controller"
     app._controller = controller
     return app
+
+
+def create_model_worker_app(log_level: str = "INFO", **kwargs) -> FastAPI:
+    """
+    kwargs包含的字段如下：
+    host:
+    port:
+    model_names:[`model_name`]
+    controller_address:
+    worker_address:
+
+
+    对于online_api:
+        online_api:True
+        worker_class: `provider`                                            
+    对于离线模型：
+        model_path: `model_name_or_path`,huggingface的repo-id或本地路径
+        device:`LLM_DEVICE`
+    """
+    import fastchat.constants
+    fastchat.constants.LOGDIR = LOG_PATH
+    from fastchat.serve.model_worker import worker_id, logger
+    import argparse
+    logger.setLevel(log_level)
+
+    parser = argparse.ArgumentParser()
+    args = parser.parse_args([])
+
+    for k, v in kwargs.items():
+        setattr(args, k, v)
+
+    from configs.model_config import VLLM_MODEL_DICT
+    
+    if kwargs["model_names"][0] in VLLM_MODEL_DICT and args.infer_turbo == "vllm":
+        
+        print("=" * 30 + "run into vllm part" + "=" * 30)
+
+    else:
+        from fastchat.serve.model_worker import app, GptqConfig, AWQConfig, ModelWorker
+        args.gpus = "0"
+        args.max_gpu_memory = "20GiB"
+        args.num_gpus = 1
+
+        args.log_8bit=False
+        args.cpu_offloading = None
+        args.gptq_ckpt = None
+        args.gptq_wbits = 16
+        args.gptq_groupsize = -1
+        args.gptq_act_order = False
+        args.awq_ckpt = None
+        args.awq_wbits = 16
+        args.awq_groupsize = -1
+        args.model_names = []
+        args.conv_template = None
+        args.limit_worker_concurrency = 5
+        args.stream_interval = 2
+        args.no_register = False
+        args.embed_in_truncate = False
+        for k, v in kwargs.items():
+            setattr(args, k, v)
+        if args.gpus:
+            if args.num_gpus is None:
+                args.num_gpus = len(args.gpus.split(','))
+            if len(args.gpus.split(",")) < args.num_gpus:
+                raise ValueError(
+                    f"Larger --num-gpus ({args.num_gpus}) than --gpus {args.gpus}!"
+                )
+            os.environ["CUDA_VISIBLE_DEVICES"] = args.gpus
+        gptq_config = GptqConfig(
+            ckpt=args.gptq_ckpt or args.model_path,
+            wbits=args.gptq_wbits,
+            groupsize=args.gptq_groupsize,
+            act_order=args.gptq_act_order,
+        )
+        awq_config = AWQConfig(
+            ckpt=args.awq_ckpt or args.model_path,
+            wbits=args.awq_wbits,
+            groupsize=args.awq_groupsize,
+        )
+
+        worker = ModelWorker(
+            controller_addr=args.controller_address,
+            worker_addr=args.worker_address,
+            worker_id=worker_id,
+            model_path=args.model_path,
+            model_names=args.model_names,
+            limit_worker_concurrency=args.limit_worker_concurrency,
+            no_register=args.no_register,
+            device=args.device,
+            num_gpus=args.num_gpus,
+            max_gpu_memory=args.max_gpu_memory,
+            load_8bit=args.load_8bit,
+            cpu_offloading=args.cpu_offloading,
+            gptq_config=gptq_config,
+            awq_config=awq_config,
+            stream_interval=args.stream_interval,
+            conv_template=args.conv_template,
+            embed_in_truncate=args.embed_in_truncate,
+        )
+        sys.modules["fastchat.serve.model_worker"].args = args
+        sys.modules["fastchat.serve.model_worker"].gptq_config = gptq_config
+        sys.modules["fastchat.serve.model_worker"].worker = worker
+
+    MakeFastAPIOffline(app)
+    app.title = f"FastChat LLM Server ({args.model_names[0]})"
+    app._worker = worker
+    return app
+
 
 
 def create_openai_api_app(
@@ -104,7 +214,35 @@ def run_openai_api(log_level: str = "INFO", started_event: mp.Event = None):
     port = FSCHAT_OPENAI_API["port"]
     uvicorn.run(app, host=host, port=port)
 
-def run_model_worker():
+def run_model_worker(
+        model_name: str = LLM_MODEL,
+        controller_address: str = "",
+        log_level: str = "INFO",
+        q: mp.Queue = None,
+        started_event: mp.Event = None,
+):
+    import uvicorn
+    from server.utils import set_httpx_config
+    set_httpx_config()
+
+    kwargs = get_model_worker_config(model_name)
+    host = kwargs.pop("host")
+    port = kwargs.pop("port")
+    kwargs["model_names"] = [model_name]
+    kwargs["controller_address"] = controller_address or fschat_controller_address()
+    kwargs["worker_address"] = fschat_model_worker_address(model_name)
+    model_path = kwargs.get("model_path", "")
+    kwargs["model_path"] = model_path
+
+    app = create_model_worker_app(log_level=log_level, **kwargs)
+    _set_app_event(app, started_event)
+
+    if log_level == "ERROR":
+        sys.stdout = sys.__stdout__
+        sys.stderr = sys.__stderr__
+
+    uvicorn.run(app, host=host, port=port, log_level=log_level.lower())
+
 
 
 def run_api_server(started_event: mp.Event = None):
@@ -113,10 +251,32 @@ def run_api_server(started_event: mp.Event = None):
     from server.utils import set_httpx_config
     set_httpx_config()
 
-    
+    app = create_app()
+    _set_app_event(app, started_event)
+
+    host = API_SERVER("host")
+    port = API_SERVER("port")
+
+    uvicorn.run(app, host=host, port=port)
 
 
-def run_webui():
+def run_webui(started_event: mp.Event = None):
+    from server.utils import set_httpx_config
+    set_httpx_config()
+
+    host = WEBUI_SERVER["host"]
+    port = WEBUI_SERVER["port"]
+
+    p = subprocess.Popen(["streamlit", "run", "webui.py",
+                          "--server.address", host,
+                          "--server.port", str(port),
+                          "--theme.base", "light",
+                          "--theme.primaryColor", "#165dff",
+                          "--theme.secondaryBackgroupdColor", "Ef5f5f5",
+                          "--theme.textColor", "#000000",
+                          ])
+    started_event.set()
+    p.wait()
 
 
 async def start_main_server():

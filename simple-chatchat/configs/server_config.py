@@ -1,4 +1,5 @@
-
+import sys
+from configs.model_config import LLM_DEVICE
 
 # API 是否开启跨域，默认为False，如果需要开启，请设置为True
 # is open cross domain
