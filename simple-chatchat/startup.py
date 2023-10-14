@@ -4,11 +4,16 @@ import os
 import subprocess
 import multiprocessing as mp
 from multiprocessing import Process
+import argparse
+import streamlit
+from pprint import pprint
+
 
 from configs import (
     LOG_PATH,
     log_verbose,
     logger,
+    VERSION,
     LLM_MODEL,
     EMBEDDING_MODEL,
     TEXT_SPLITTER_NAME,
@@ -19,7 +24,7 @@ from configs import (
     HTTPX_DEFAULT_TIMEOUT,
 )
 
-from server.utils import (fschat_openai_api_address, fschat_controller_address, fschat_model_worker_address, FastAPI, MakeFastAPIOffline, get_model_worker_config)
+from server.utils import (fschat_openai_api_address, fschat_controller_address, fschat_model_worker_address, llm_device, embedding_device, webui_address, FastAPI, MakeFastAPIOffline, get_model_worker_config)
 
 from typing import List
 
@@ -82,7 +87,7 @@ def create_model_worker_app(log_level: str = "INFO", **kwargs) -> FastAPI:
         args.max_gpu_memory = "20GiB"
         args.num_gpus = 1
 
-        args.log_8bit=False
+        args.load_8bit=False
         args.cpu_offloading = None
         args.gptq_ckpt = None
         args.gptq_wbits = 16
@@ -254,8 +259,8 @@ def run_api_server(started_event: mp.Event = None):
     app = create_app()
     _set_app_event(app, started_event)
 
-    host = API_SERVER("host")
-    port = API_SERVER("port")
+    host = API_SERVER["host"]
+    port = API_SERVER["port"]
 
     uvicorn.run(app, host=host, port=port)
 
@@ -267,29 +272,184 @@ def run_webui(started_event: mp.Event = None):
     host = WEBUI_SERVER["host"]
     port = WEBUI_SERVER["port"]
 
+    """     
     p = subprocess.Popen(["streamlit", "run", "webui.py",
                           "--server.address", host,
                           "--server.port", str(port),
                           "--theme.base", "light",
                           "--theme.primaryColor", "#165dff",
-                          "--theme.secondaryBackgroupdColor", "Ef5f5f5",
+                          "--theme.secondaryBackgroundColor", "Ef5f5f5",
                           "--theme.textColor", "#000000",
+                          ])
+    started_event.set()
+    p.wait() """
+
+    p = subprocess.Popen(["streamlit", "hello",
                           ])
     started_event.set()
     p.wait()
 
 
+
+
+
+def parse_args() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "-a",
+        "--all-webui",
+        action="store_true",
+        help="run fastchat's controller/openai_api/model_worker servers, run api.py and webui.py",
+        dest="all_webui",
+    )
+    parser.add_argument(
+        "--all-api",
+        action="store_true",
+        help="run fastchat's controller/openai_api/model_worker servers, run api.py",
+        dest="all_api",
+    )
+    parser.add_argument(
+        "--llm-api",
+        action="store_true",
+        help="run fastchat's controller/openai_api/model_worker servers",
+        dest="llm_api",
+    )
+    parser.add_argument(
+        "-o",
+        "--openai-api",
+        action="store_true",
+        help="run fastchat's controller/openai_api servers",
+        dest="openai_api",
+    )
+    parser.add_argument(
+        "-m",
+        "--model-worker",
+        action="store_true",
+        help="run fastchat's model_worker server with specified model name. specify --model-name if not using default LLM_MODEL",
+        dest="model_worker",
+    )
+    parser.add_argument(
+        "-n",
+        "--model-name",
+        type=str,
+        nargs="+",
+        default=[LLM_MODEL],
+        help="specify model name for model worker. add addition names with space seperated to start multiple model workers.",
+        dest="model_name",
+    )
+    parser.add_argument(
+        "-c",
+        "--controller",
+        type=str,
+        help="specify controller address the worker is registered to. default is FSCHAT_CONTROLLER",
+        dest="controller_address",
+    )
+    parser.add_argument(
+        "--api",
+        action="store_true",
+        help="run api.py server",
+        dest="api",
+    )
+    parser.add_argument(
+        "-p",
+        "--api-worker",
+        action="store_true",
+        help="run online model api such as zhipuai",
+        dest="api_worker",
+    )
+    parser.add_argument(
+        "-w",
+        "--webui",
+        action="store_true",
+        help="run webui.py server",
+        dest="webui",
+    )
+    parser.add_argument(
+        "-q",
+        "--quiet",
+        action="store_true",
+        help="减少fastchat服务log信息",
+        dest="quiet",
+    )
+    args = parser.parse_args()
+    return args, parser
+
+
+
+def dump_server_info(after_start=False, args=None):
+    import platform
+    import langchain
+    import fastchat
+    from server.utils import api_address, webui_address
+
+    print("\n")
+    print("=" * 30 + "Langchain-Chatchat Configuration" + "=" * 30)
+    print(f"操作系统：{platform.platform()}.")
+    print(f"python版本：{sys.version}")
+    print(f"项目版本：{VERSION}")
+    print(f"langchain版本：{langchain.__version__}. fastchat版本：{fastchat.__version__}")
+    print("\n")
+
+    models = [LLM_MODEL]
+    if args and args.model_name:
+        models = args.model_name
+
+    print(f"当前使用的分词器：{TEXT_SPLITTER_NAME}")
+    print(f"当前启动的LLM模型：{models} @ {llm_device()}")
+
+    for model in models:
+        pprint(get_model_worker_config(model))
+    print(f"当前Embbedings模型： {EMBEDDING_MODEL} @ {embedding_device()}")
+
+    if after_start:
+        print("\n")
+        print(f"服务端运行信息：")
+        if args.openai_api:
+            print(f"    OpenAI API Server: {fschat_openai_api_address()}")
+        if args.api:
+            print(f"    Chatchat  API  Server: {api_address()}")
+        if args.webui:
+            print(f"    Chatchat WEBUI Server: {webui_address()}")
+    print("=" * 30 + "Langchain-Chatchat Configuration" + "=" * 30)
+    print("\n")
+
 async def start_main_server():
     
+    import time
+    import signal
+
+    def handler(signalname):
+        """
+        Python 3.9 has `signal.strsignal(signalnum)` so this closure would not be needed.
+        Also, 3.8 includes `signal.valid_signals()` that can be used to create a mapping for the same purpose.
+        """
+        def f(signal_received, frame):
+            raise KeyboardInterrupt(f"{signalname} received")
+        return f
+
+    # This will be inherited by the child process if it is forked (not spawned)
+    signal.signal(signal.SIGINT, handler("SIGINT"))
+    signal.signal(signal.SIGTERM, handler("SIGTERM"))
+
     mp.set_start_method("spawn")
     manager = mp.Manager()
 
     queue = manager.Queue()
 
+    args, parser = parse_args()
+
+    args.openai_api = True
+    args.model_worker = True
+    args.api = True
+    args.api_worker = True
+    args.webui = True
+
     log_level = "INFO"
 
     processes = {"online_api": {}, "model_worker": {}}
 
+    def process_count():
+        return len(processes) + len(processes["online_api"]) + len(processes["model_worker"]) - 2
 
     ## controller
 
@@ -303,6 +463,9 @@ async def start_main_server():
 
     processes["controller"] = process
 
+    print("controller started -> ", processes)
+    print("=" * 60)
+
     ## openai_api
 
     process = Process(
@@ -312,6 +475,9 @@ async def start_main_server():
     )
 
     processes["openai_api"] = process
+
+    print("openai_api started -> ", processes)
+    print("=" * 60)
 
     #### model_worker
 
@@ -337,6 +503,9 @@ async def start_main_server():
 
     processes["model_worker"][model_name] = process
 
+    print("model_worker started -> ", processes)
+    print("=" * 60)
+
     ## api_server
 
     api_started = manager.Event()
@@ -349,6 +518,8 @@ async def start_main_server():
     )
     processes["api"] = process
 
+    print("api started -> ", processes)
+    print("=" * 60)
 
     ## webui_server
 
@@ -362,6 +533,68 @@ async def start_main_server():
     )
     processes["webui"] = process 
 
+    print("webui started -> ", processes)
+    print("=" * 60)
+
+    if process_count() == 0:
+        parser.print_help()
+    else:
+        try:
+            # 保证任务收到SIGINT后，能够正常退出
+            if p:= processes.get("controller"):
+                p.start()
+                p.name = f"{p.name} ({p.pid})"
+                controller_started.wait() # 等待controller启动完成
+
+            if p:= processes.get("openai_api"):
+                p.start()
+                p.name = f"{p.name} ({p.pid})"
+
+            for n, p in processes.get("model_worker", {}).items():
+                p.start()
+                p.name = f"{p.name} ({p.pid})"
+
+            for n, p in processes.get("online_api", []).items():
+                p.start()
+                p.name = f"{p.name} ({p.pid})"
+
+            # 等待所有model_worker启动完成
+            for e in model_worker_started:
+                e.wait()
+
+            if p:= processes.get("api"):
+                p.start()
+                p.name = f"{p.name} ({p.pid})"
+                api_started.wait() # 等待api.py启动完成
+
+            if p:= processes.get("webui"):
+                p.start()
+                p.name = f"{p.name} ({p.pid})"
+                webui_started.wait() # 等待webui.py启动完成
+
+            dump_server_info(after_start=True, args=args)
+
+        except Exception as e:
+            logger.error(e)
+            logger.warning("Caught KeyboardInterrupt! Setting stop event...")
+        finally:
+            # Send SIGINT if process doesn't exit quickly enough, and kill it as last resort
+            # .is_alive() also implicitly joins the process (good practice in linux)
+            # while alive_procs := [p for p in processes.values() if p.is_alive()]:
+
+            for p in processes.values():
+                logger.warning("Sending SIGKILL to %s", p)
+                # Queues and other inter-process communication primitives can break when
+                # process is killed, but we don't care here
+
+                if isinstance(p, dict):
+                    for process in p.values():
+                        process.kill()
+                else:
+                    p.kill()
+
+            for p in processes.values():
+                logger.info("Process status: %s", p)
 
 if __name__ == "__main__":
 

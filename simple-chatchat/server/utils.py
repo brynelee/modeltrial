@@ -4,9 +4,9 @@ from pathlib import Path
 import pydantic
 from pydantic import BaseModel
 
-from configs import (HTTPX_DEFAULT_TIMEOUT, MODEL_PATH, MODEL_ROOT_PATH, EMBEDDING_DEVICE, LLM_DEVICE)
+from configs import (HTTPX_DEFAULT_TIMEOUT, MODEL_PATH, MODEL_ROOT_PATH, LLM_MODEL, EMBEDDING_DEVICE, LLM_DEVICE)
 
-from typing import Union, Dict, Any, Literal
+from typing import Union, Dict, Any, Literal, Optional
 
 
 class BaseResponse(BaseModel):
@@ -55,9 +55,9 @@ def get_model_worker_config(model_name: str = None) -> dict:
     加载model worker的配置项。
     优先级:FSCHAT_MODEL_WORKERS[model_name] > ONLINE_LLM_MODEL[model_name] > FSCHAT_MODEL_WORKERS["default"]
     '''
-    from configs.model_config import ONLINE_LLM_MODEL
+    # from configs.model_config import ONLINE_LLM_MODEL
     from configs.server_config import FSCHAT_MODEL_WORKERS
-    from server import model_workers
+    # from server import model_workers
 
     config = FSCHAT_MODEL_WORKERS.get("default", {}).copy()
 
@@ -88,6 +88,38 @@ def fschat_openai_api_address() -> str:
     port = FSCHAT_OPENAI_API["port"]
     return f"http://{host}:{port}/v1"
 
+def api_address() -> str:
+    from configs.server_config import API_SERVER
+
+    host = API_SERVER["host"]
+    port = API_SERVER["port"]
+    return f"http://{host}:{port}"
+
+def webui_address() -> str:
+    from configs.server_config import WEBUI_SERVER
+
+    host = WEBUI_SERVER["host"]
+    port = WEBUI_SERVER["port"]
+    return f"http://{host}:{port}"
+
+def iter_over_async(ait, loop):
+    '''
+    将异步生成器封装成同步生成器.
+    '''
+    ait = ait.__aiter__()
+
+    async def get_next():
+        try:
+            obj = await ait.__anext__()
+            return False, obj
+        except StopAsyncIteration:
+            return True, None
+
+    while True:
+        done, obj = loop.run_until_complete(get_next())
+        if done:
+            break
+        yield obj
 
 def MakeFastAPIOffline(
         app: FastAPI,

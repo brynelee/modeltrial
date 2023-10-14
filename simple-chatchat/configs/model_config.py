@@ -94,8 +94,16 @@ MODEL_PATH = {
     },
 }
 
+# 选用的 Embedding 名称
+EMBEDDING_MODEL = "m3e-base" # 可以尝试最新的嵌入式sota模型：piccolo-large-zh
+
+
 # Embedding 模型运行设备。设为"auto"会自动检测，也可手动设定为"cuda","mps","cpu"其中之一。
 EMBEDDING_DEVICE = "auto"
+
+# LLM 名称
+# LLM_MODEL = "chatglm2-6b"
+LLM_MODEL = "chatglm2-6b-32k"
 
 # LLM 运行设备。设为"auto"会自动检测，也可手动设定为"cuda","mps","cpu"其中之一。
 LLM_DEVICE = "auto"
