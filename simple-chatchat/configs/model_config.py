@@ -108,6 +108,12 @@ LLM_MODEL = "chatglm2-6b-32k"
 # LLM 运行设备。设为"auto"会自动检测，也可手动设定为"cuda","mps","cpu"其中之一。
 LLM_DEVICE = "auto"
 
+# 历史对话轮数
+HISTORY_LEN = 3
+
+# LLM通用对话参数
+TEMPERATURE = 0.7
+# TOP_P = 0.95 # ChatOpenAI暂不支持该参数
 
 VLLM_MODEL_DICT = {
     "aquila-7b":"BAAI/Aquila-7B",

@@ -5,6 +5,7 @@ import subprocess
 import multiprocessing as mp
 from multiprocessing import Process
 import argparse
+from datetime import datetime
 import streamlit
 from pprint import pprint
 
@@ -271,8 +272,7 @@ def run_webui(started_event: mp.Event = None):
 
     host = WEBUI_SERVER["host"]
     port = WEBUI_SERVER["port"]
-
-    """     
+    
     p = subprocess.Popen(["streamlit", "run", "webui.py",
                           "--server.address", host,
                           "--server.port", str(port),
@@ -281,14 +281,11 @@ def run_webui(started_event: mp.Event = None):
                           "--theme.secondaryBackgroundColor", "Ef5f5f5",
                           "--theme.textColor", "#000000",
                           ])
+    
+    # p = subprocess.Popen(["streamlit", "hello"])
+    
     started_event.set()
-    p.wait() """
-
-    p = subprocess.Popen(["streamlit", "hello",
-                          ])
-    started_event.set()
-    p.wait()
-
+    p.wait() 
 
 
 
@@ -573,6 +570,63 @@ async def start_main_server():
                 webui_started.wait() # 等待webui.py启动完成
 
             dump_server_info(after_start=True, args=args)
+
+            while True:
+                cmd = queue.get() # 收到切换模型的消息
+                e = manager.Event()
+                if isinstance(cmd, list):
+                    model_name, cmd, new_model_name = cmd
+                    if cmd == "start": # 运行新模型
+                        logger.info(f"准备启动新模型进程：{new_model_name}")
+                        process = Process(
+                            target=run_model_worker,
+                            name=f"model_worker - {new_model_name}",
+                            kwargs=dict(model_name=new_model_name,
+                                        controller_address=args.controller_address,
+                                        log_level=log_level,
+                                        q=queue,
+                                        started_event=e),
+                            daemon=True,
+                        )
+                        process.start()
+                        process.name = f"{process.name} ({process.pid})"
+                        processes["model_worker"][new_model_name] = process
+                        e.wait()
+                        logger.info(f"成功启动新模型进程：{new_model_name}")
+                    elif cmd == "stop":
+                        if process := processes["model_worker"].get(model_name):
+                            time.sleep(1)
+                            process.terminate()
+                            process.join()
+                            logger.info(f"停止模型进程：{model_name}")
+                        else:
+                            logger.error(f"未找到模型进程：{model_name}")
+                    elif cmd == "replace":
+                        if process := processes["model_worker"].pop(model_name, None):
+                            logger.info(f"停止模型进程：{model_name}")
+                            start_time = datetime.now()
+                            time.sleep(1)
+                            process.terminate()
+                            process.join()
+                            process = Process(
+                                target=run_model_worker,
+                                name=f"model_worker - {new_model_name}",
+                                kwargs=dict(model_name=new_model_name,
+                                            controller_address=args.controller_address,
+                                            log_level=log_level,
+                                            q=queue,
+                                            started_event=e),
+                                daemon=True,
+                            )
+                            process.start()
+                            process.name = f"{process.name} ({process.pid})"
+                            processes["model_worker"][new_model_name] = process
+                            e.wait()
+                            timing = datetime.now() - start_time
+                            logger.info(f"成功启动新模型进程：{new_model_name}。用时：{timing}。")
+                        else:
+                            logger.error(f"未找到模型进程：{model_name}")
+
 
         except Exception as e:
             logger.error(e)

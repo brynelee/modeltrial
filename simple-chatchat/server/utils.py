@@ -6,6 +6,10 @@ from pydantic import BaseModel
 
 from configs import (HTTPX_DEFAULT_TIMEOUT, MODEL_PATH, MODEL_ROOT_PATH, LLM_MODEL, EMBEDDING_DEVICE, LLM_DEVICE)
 
+import os
+
+import httpx
+
 from typing import Union, Dict, Any, Literal, Optional
 
 
@@ -281,3 +285,59 @@ def embedding_device(device: str = None) -> Literal["cuda", "mps", "cpu"]:
     if device not in ["cuda", "mps", "cpu"]:
         device = detect_device()
     return device
+
+
+def get_httpx_client(
+        use_async: bool = False,
+        proxies: Union[str, Dict] = None,
+        timeout: float = HTTPX_DEFAULT_TIMEOUT,
+        **kwargs,
+) -> Union[httpx.Client, httpx.AsyncClient]:
+    '''
+    helper to get httpx client with default proxies that bypass local addesses.
+    '''
+    default_proxies = {
+        # do not use proxy for locahost
+        "all://127.0.0.1": None,
+        "all://localhost": None,
+    }
+    # do not use proxy for user deployed fastchat servers
+    for x in [
+        fschat_controller_address(),
+        fschat_model_worker_address(),
+        fschat_openai_api_address(),
+    ]:
+        host = ":".join(x.split(":")[:2])
+        default_proxies.update({host: None})
+
+    # get proxies from system envionrent
+    # proxy not str empty string, None, False, 0, [] or {}
+    default_proxies.update({
+        "http://": (os.environ.get("http_proxy")
+                    if os.environ.get("http_proxy") and len(os.environ.get("http_proxy").strip())
+                    else None),
+        "https://": (os.environ.get("https_proxy")
+                     if os.environ.get("https_proxy") and len(os.environ.get("https_proxy").strip())
+                     else None),
+        "all://": (os.environ.get("all_proxy")
+                   if os.environ.get("all_proxy") and len(os.environ.get("all_proxy").strip())
+                   else None),
+    })
+    for host in os.environ.get("no_proxy", "").split(","):
+        if host := host.strip():
+            default_proxies.update({host: None})
+
+    # merge default proxies with user provided proxies
+    if isinstance(proxies, str):
+        proxies = {"all://": proxies}
+
+    if isinstance(proxies, dict):
+        default_proxies.update(proxies)
+
+    # construct Client
+    kwargs.update(timeout=timeout, proxies=default_proxies)
+    print(kwargs)
+    if use_async:
+        return httpx.AsyncClient(**kwargs)
+    else:
+        return httpx.Client(**kwargs)
