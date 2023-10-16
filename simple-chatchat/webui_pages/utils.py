@@ -16,13 +16,16 @@ from configs import (
     logger, log_verbose,
 )
 
+import contextlib
 import httpx
+import asyncio
+import json
 
 from fastapi.responses import StreamingResponse
 
 from pprint import pprint
 
-from server.utils import set_httpx_config, api_address, get_httpx_client
+from server.utils import run_async, iter_over_async, set_httpx_config, api_address, get_httpx_client
 
 class ApiRequest:
     '''
@@ -192,7 +195,7 @@ class ApiRequest:
                 logger.error(f'{e.__class__.__name__}: {msg}',
                                 exc_info=e if log_verbose else None)
                 retry -= 1
-""" 
+    
     def _fastapi_stream2generator(self, response: StreamingResponse, as_json: bool =False):
         '''
         将api.py中视图函数返回的StreamingResponse转化为同步生成器
@@ -253,6 +256,7 @@ class ApiRequest:
                          exc_info=e if log_verbose else None)
             yield {"code": 500, "msg": msg}
 
+    """
     # 对话相关操作
 
     def chat_fastchat(
@@ -294,7 +298,7 @@ class ApiRequest:
                 stream=True,
             )
             return self._httpx_stream2generator(response)
-
+    """
     def chat_chat(
         self,
         query: str,
@@ -331,6 +335,7 @@ class ApiRequest:
             response = self.post("/chat/chat", json=data, stream=True)
             return self._httpx_stream2generator(response)
 
+    """
     def agent_chat(
             self,
             query: str,
@@ -901,3 +906,49 @@ class ApiRequest:
                 timeout=HTTPX_DEFAULT_TIMEOUT, # wait for new worker_model
             )
             return r.json() """
+
+
+def check_error_msg(data: Union[str, dict, list], key: str = "errorMsg") -> str:
+    '''
+    return error message if error occured when requests API
+    '''
+    if isinstance(data, dict):
+        if key in data:
+            return data[key]
+        if "code" in data and data["code"] != 200:
+            return data["msg"]
+    return ""
+
+
+def check_success_msg(data: Union[str, dict, list], key: str = "msg") -> str:
+    '''
+    return error message if error occured when requests API
+    '''
+    if (isinstance(data, dict)
+        and key in data
+        and "code" in data
+        and data["code"] == 200):
+        return data[key]
+    return ""
+
+
+if __name__ == "__main__":
+    api = ApiRequest(no_remote_api=True)
+
+    # print(api.chat_fastchat(
+    #     messages=[{"role": "user", "content": "hello"}]
+    # ))
+
+    # with api.chat_chat("你好") as r:
+    #     for t in r.iter_text(None):
+    #         print(t)
+
+    # r = api.chat_chat("你好", no_remote_api=True)
+    # for t in r:
+    #     print(t)
+
+    # r = api.duckduckgo_search_chat("室温超导最新研究进展", no_remote_api=True)
+    # for t in r:
+    #     print(t)
+
+    # print(api.list_knowledge_bases())

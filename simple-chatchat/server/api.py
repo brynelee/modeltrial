@@ -4,6 +4,7 @@ from configs.server_config import OPEN_CROSS_DOMAIN
 
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.responses import RedirectResponse
+from server.chat import (chat)
 
 from server.utils import BaseResponse, FastAPI, MakeFastAPIOffline
 
@@ -35,11 +36,13 @@ def create_app():
     app.post("/chat/fastchat",
             tags=["Chat"],
             summary="与llm模型对话(直接与fastchat api对话)")(openai_chat)
-
+    """
+    
     app.post("/chat/chat",
             tags=["Chat"],
             summary="与llm模型对话(通过LLMChain)")(chat)
 
+    """
     app.post("/chat/knowledge_base_chat",
             tags=["Chat"],
             summary="与知识库对话")(knowledge_base_chat)
@@ -132,4 +135,6 @@ def create_app():
     """
     
     return app
+
+app = create_app()
 

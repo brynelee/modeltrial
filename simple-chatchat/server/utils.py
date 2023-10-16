@@ -1,17 +1,53 @@
 from fastapi import FastAPI
 from pathlib import Path
-
+import asyncio
 import pydantic
 from pydantic import BaseModel
 
-from configs import (HTTPX_DEFAULT_TIMEOUT, MODEL_PATH, MODEL_ROOT_PATH, LLM_MODEL, EMBEDDING_DEVICE, LLM_DEVICE)
+from configs import (HTTPX_DEFAULT_TIMEOUT, MODEL_PATH, MODEL_ROOT_PATH, 
+                     LLM_MODEL, EMBEDDING_DEVICE, LLM_DEVICE,
+                     logger, log_verbose)
 
 import os
-
+from langchain.chat_models import ChatOpenAI
 import httpx
 
-from typing import Union, Dict, Any, Literal, Optional
+from typing import List, Union, Callable, Awaitable, Dict, Any, Literal, Optional
 
+async def wrap_done(fn: Awaitable, event: asyncio.Event):
+    """Wrap an awaitable with a event to signal when it's done or an exception is raised."""
+    try:
+        await fn
+    except Exception as e:
+        # TODO: handle exception
+        msg = f"Caught exception: {e}"
+        logger.error(f'{e.__class__.__name__}: {msg}',
+                     exc_info=e if log_verbose else None)
+    finally:
+        # Signal the aiter to stop.
+        event.set()
+
+def get_ChatOpenAI(
+        model_name: str,
+        temperature: float,
+        streaming: bool = True,
+        callbacks: List[Callable] = [],
+        verbose: bool = True,
+        **kwargs: Any,
+) -> ChatOpenAI:
+    config = get_model_worker_config(model_name)
+    model = ChatOpenAI(
+        streaming=streaming,
+        verbose=verbose,
+        callbacks=callbacks,
+        openai_api_key=config.get("api_key", "EMPTY"),
+        openai_api_base=config.get("api_base_url", fschat_openai_api_address()),
+        model_name=model_name,
+        temperature=temperature,
+        openai_proxy=config.get("openai_proxy"),
+        **kwargs
+    )
+    return model
 
 class BaseResponse(BaseModel):
     code: int = pydantic.Field(200, description="API status code")
@@ -105,6 +141,17 @@ def webui_address() -> str:
     host = WEBUI_SERVER["host"]
     port = WEBUI_SERVER["port"]
     return f"http://{host}:{port}"
+
+
+def run_async(cor):
+    '''
+    在同步环境中运行异步代码.
+    '''
+    try:
+        loop = asyncio.get_event_loop()
+    except:
+        loop = asyncio.new_event_loop()
+    return loop.run_until_complete(cor)
 
 def iter_over_async(ait, loop):
     '''
@@ -202,6 +249,16 @@ def MakeFastAPIOffline(
                 redoc_favicon_url=favicon,
             )
         
+
+def get_prompt_template(name: str) -> Optional[str]:
+    '''
+    从prompt_config中加载模板内容
+    '''
+    from configs import prompt_config
+    import importlib
+    importlib.reload(prompt_config)  # TODO: 检查configs/prompt_config.py文件有修改再重新加载
+
+    return prompt_config.PROMPT_TEMPLATES.get(name)
 
 def set_httpx_config(
         timeout: float = HTTPX_DEFAULT_TIMEOUT,
