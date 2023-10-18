@@ -42,9 +42,10 @@ MODEL_PATH = {
     "llm_model": {
         # 以下部分模型并未完全测试，仅根据fastchat和vllm模型的模型列表推定支持
         "chatglm-6b": "THUDM/chatglm-6b",
-        "chatglm2-6b": "THUDM/chatglm2-6b",
+        # "chatglm2-6b": "THUDM/chatglm2-6b",
+        "chatglm2-6b": "D:\\AI_Spaces\\ChatGLM2\\text-generation-webui\\models\\chatglm2-6b",
         "chatglm2-6b-int4": "THUDM/chatglm2-6b-int4",
-        "chatglm2-6b-32k": "THUDM/chatglm2-6b-32k",
+        # "chatglm2-6b-32k": "THUDM/chatglm2-6b-32k",
         "chatglm2-6b-32k": "D:\\AI_Spaces\\models\\ChatGLM2-6B-32K",
 
         "baichuan2-13b": "baichuan-inc/Baichuan-13B-Chat",
@@ -78,7 +79,8 @@ MODEL_PATH = {
         "Llama-2-13b-hf":"meta-llama/Llama-2-13b-hf",    
         "Llama-2-70b-hf":"meta-llama/Llama-2-70b-hf",
         "open_llama_13b":"openlm-research/open_llama_13b",    
-        "vicuna-13b-v1.3":"lmsys/vicuna-13b-v1.3",
+        # "vicuna-13b-v1.3":"lmsys/vicuna-13b-v1.3",
+        "vicuna-13b-v1.3":"D:\\AI_Spaces\\models\\vicuna-13b-v1.3",
         "koala":"young-geng/koala",  
           
         "mpt-7b":"mosaicml/mpt-7b",
@@ -90,7 +92,11 @@ MODEL_PATH = {
         "Qwen-7B":"Qwen/Qwen-7B",
         "Qwen-14B":"Qwen/Qwen-14B",
         "Qwen-7B-Chat":"Qwen/Qwen-7B-Chat",
-        "Qwen-14B-Chat":"Qwen/Qwen-14B-Chat",
+        # "Qwen-14B-Chat":"Qwen/Qwen-14B-Chat",
+        "Qwen-14B-Chat":"D:\AI_Spaces\models\Qwen-14B-Chat",
+
+        "WizardCoder-Python-13B-V1.0": "D:\\AI_Spaces\\ChatGLM2\\text-generation-webui\\models\\WizardCoder-Python-13B-V1.0",
+                
     },
 }
 
@@ -103,7 +109,10 @@ EMBEDDING_DEVICE = "auto"
 
 # LLM 名称
 # LLM_MODEL = "chatglm2-6b"
-LLM_MODEL = "chatglm2-6b-32k"
+# LLM_MODEL = "chatglm2-6b-32k"
+# LLM_MODEL = "Qwen-14B-Chat"
+# LLM_MODEL = "WizardCoder-Python-13B-V1.0"
+LLM_MODEL = "vicuna-13b-v1.3"
 
 # LLM 运行设备。设为"auto"会自动检测，也可手动设定为"cuda","mps","cpu"其中之一。
 LLM_DEVICE = "auto"

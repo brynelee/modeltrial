@@ -66,7 +66,7 @@ def dialogue_page(api: ApiRequest):
                                      key="dialogue_mode",
                                      )
         
-        llm_model = "chatglm2-6b-32k"
+        llm_model = LLM_MODEL
 
         temperature = st.slider("Temperature：", 0.0, 1.0, TEMPERATURE, 0.01)
 

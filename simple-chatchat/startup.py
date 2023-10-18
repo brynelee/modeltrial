@@ -483,7 +483,7 @@ async def start_main_server():
     e = manager.Event()
     model_worker_started.append(e)
 
-    model_name = "chatglm2-6b-32k"
+    model_name = LLM_MODEL
 
     controller_address = fschat_controller_address()
 
