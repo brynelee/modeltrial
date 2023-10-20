@@ -91,7 +91,8 @@ MODEL_PATH = {
 
         "Qwen-7B":"Qwen/Qwen-7B",
         "Qwen-14B":"Qwen/Qwen-14B",
-        "Qwen-7B-Chat":"Qwen/Qwen-7B-Chat",
+        # "Qwen-7B-Chat":"Qwen/Qwen-7B-Chat",
+        "Qwen-7B-Chat":"C:\\Users\\bryne\\.cache\\modelscope\\hub\\qwen\\Qwen-7B-Chat",
         # "Qwen-14B-Chat":"Qwen/Qwen-14B-Chat",
         "Qwen-14B-Chat":"D:\AI_Spaces\models\Qwen-14B-Chat",
 
@@ -112,7 +113,8 @@ EMBEDDING_DEVICE = "auto"
 # LLM_MODEL = "chatglm2-6b-32k"
 # LLM_MODEL = "Qwen-14B-Chat"
 # LLM_MODEL = "WizardCoder-Python-13B-V1.0"
-LLM_MODEL = "vicuna-13b-v1.3"
+# LLM_MODEL = "vicuna-13b-v1.3"
+LLM_MODEL = "Qwen-7B-Chat"
 
 # LLM 运行设备。设为"auto"会自动检测，也可手动设定为"cuda","mps","cpu"其中之一。
 LLM_DEVICE = "auto"
