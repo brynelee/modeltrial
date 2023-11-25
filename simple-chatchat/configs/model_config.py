@@ -46,7 +46,7 @@ MODEL_PATH = {
         "chatglm2-6b": "D:\\AI_Spaces\\ChatGLM2\\text-generation-webui\\models\\chatglm2-6b",
         "chatglm2-6b-int4": "THUDM/chatglm2-6b-int4",
         # "chatglm2-6b-32k": "THUDM/chatglm2-6b-32k",
-        "chatglm2-6b-32k": "D:\\AI_Spaces\\models\\ChatGLM2-6B-32K",
+        "ChatGLM3-6B-32K": "/mnt/d/AI_Spaces/models/chatglm3-6b-32k",
 
         "baichuan2-13b": "baichuan-inc/Baichuan-13B-Chat",
         "baichuan2-7b":"baichuan-inc/Baichuan2-7B-Chat",
@@ -114,7 +114,8 @@ EMBEDDING_DEVICE = "auto"
 # LLM_MODEL = "Qwen-14B-Chat"
 # LLM_MODEL = "WizardCoder-Python-13B-V1.0"
 # LLM_MODEL = "vicuna-13b-v1.3"
-LLM_MODEL = "Qwen-7B-Chat"
+# LLM_MODEL = "Qwen-7B-Chat"
+LLM_MODEL = "ChatGLM3-6B-32K"
 
 # LLM 运行设备。设为"auto"会自动检测，也可手动设定为"cuda","mps","cpu"其中之一。
 LLM_DEVICE = "auto"

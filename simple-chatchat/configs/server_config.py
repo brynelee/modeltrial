@@ -5,7 +5,7 @@ from configs.model_config import LLM_DEVICE
 # is open cross domain
 OPEN_CROSS_DOMAIN = False
 
-DEFAULT_BIND_HOST = "127.0.0.1"
+DEFAULT_BIND_HOST = "172.23.115.108"
 
 # httpx 请求默认超时时间（秒）。如果加载模型或对话较慢，出现超时错误，可以适当加大该值。
 HTTPX_DEFAULT_TIMEOUT = 300.0
