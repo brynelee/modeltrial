@@ -34,6 +34,10 @@ prompt = PromptTemplate(
 )
 
 # And a query intended to prompt a language model to populate the data structure.
-prompt_and_model = prompt | model
-output = prompt_and_model.invoke({"query": "Tell me a joke."})
-print(parser.invoke(output))
+# prompt_and_model = prompt | model
+# output = prompt_and_model.invoke({"query": "Tell me a joke."})
+# print(parser.invoke(output))
+
+chain = prompt | model | parser
+print(chain.invoke({"query": "Tell me a joke."}))
+
