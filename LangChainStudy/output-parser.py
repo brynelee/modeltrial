@@ -38,6 +38,7 @@ prompt = PromptTemplate(
 # output = prompt_and_model.invoke({"query": "Tell me a joke."})
 # print(parser.invoke(output))
 
+# 使用runnable sequence而不用一个一个函数调用
 chain = prompt | model | parser
 print(chain.invoke({"query": "Tell me a joke."}))
 

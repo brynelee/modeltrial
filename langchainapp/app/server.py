@@ -30,6 +30,7 @@ add_routes(
 ) """
 
 prompt = ChatPromptTemplate.from_template("tell me a joke about {topic}")
+
 add_routes(
     app,
     prompt | chat_model,

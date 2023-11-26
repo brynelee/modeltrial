@@ -13,6 +13,7 @@ langchain.verbose = False
 LOG_FORMAT = "%(asctime)s - %(filename)s[line:%(lineno)d] - %(levelname)s: %(message)s"
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
+# logger.setLevel(logging.DEBUG)
 logging.basicConfig(format=LOG_FORMAT)
 
 
