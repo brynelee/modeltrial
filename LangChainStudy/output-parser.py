@@ -8,7 +8,7 @@ openai_api_base_address = "http://172.23.115.108:20000/v1"
 
 model = OpenAI(openai_api_key = "aaabbbcccdddeeefffedddsfasdfasdf", 
         openai_api_base = openai_api_base_address,
-        model_name = "ChatGLM3-6B-32K")
+        model_name = "chatglm3-6b-32k")
 
 
 # Define your desired data structure.
