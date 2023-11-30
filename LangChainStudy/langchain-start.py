@@ -5,10 +5,10 @@ openai_api_base_address = "http://172.23.115.108:20000/v1"
 
 llm = OpenAI(openai_api_key = "aaabbbcccdddeeefffedddsfasdfasdf", 
         openai_api_base = openai_api_base_address,
-        model_name = "ChatGLM3-6B-32K")
+        model_name = "chatglm3-6b-32k")
 chat_model = ChatOpenAI(openai_api_key = "aaabbbcccdddeeefffedddsfasdfasdf", 
     openai_api_base = openai_api_base_address,
-    model_name = "ChatGLM3-6B-32K")
+    model_name = "chatglm3-6b-32k")
 
 from langchain.schema import HumanMessage
 
