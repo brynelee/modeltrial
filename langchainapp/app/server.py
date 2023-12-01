@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from langchain.prompts import ChatPromptTemplate
 from langchain.chat_models import ChatAnthropic, ChatOpenAI
 from langserve import add_routes
-
+from pirate_speak.chain import chain as pirate_speak_chain
 
 app = FastAPI(
   title="LangChain Server",
@@ -11,11 +11,13 @@ app = FastAPI(
   description="A simple api server using Langchain's Runnable interfaces",
 )
 
-openai_api_base_address = "http://172.23.115.108:20000/v1"
+add_routes(app, pirate_speak_chain, path="/pirate-speak")
+
+openai_api_base_address = "http://192.168.3.84:20000/v1"
 
 chat_model = ChatOpenAI(openai_api_key = "aaabbbcccdddeeefffedddsfasdfasdf", 
     openai_api_base = openai_api_base_address,
-    model_name = "ChatGLM3-6B-32K")
+    model_name = "chatglm3-6b-32k")
 
 """ add_routes(
     app,
@@ -40,4 +42,4 @@ add_routes(
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run(app, host="172.23.115.108", port=8000)
+    uvicorn.run(app, host="192.168.3.84", port=8000)

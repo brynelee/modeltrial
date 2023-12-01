@@ -2,7 +2,7 @@
 from langchain.text_splitter import CharacterTextSplitter
 from langchain.vectorstores import Chroma
 
-full_text = open("./docs/state_of_the_union.txt", "r").read()
+full_text = open("./docs/state_of_the_union.txt", "r", encoding='utf-8').read()
 text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
 texts = text_splitter.split_text(full_text)
 
@@ -37,7 +37,7 @@ prompt = ChatPromptTemplate.from_template(template)
 
 from langchain.chat_models import ChatOpenAI
 
-openai_api_base_address = "http://172.23.115.108:20000/v1"
+openai_api_base_address = "http://192.168.3.84:20000/v1"
 
 chat_model = ChatOpenAI(openai_api_key = "aaabbbcccdddeeefffedddsfasdfasdf", 
     openai_api_base = openai_api_base_address,
