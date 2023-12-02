@@ -10,6 +10,11 @@ chat_model = ChatOpenAI(openai_api_key = "aaabbbcccdddeeefffedddsfasdfasdf",
     openai_api_base = openai_api_base_address,
     model_name = "chatglm3-6b-32k")
 
+""" openai_api_base_address = "http://192.168.3.84:20000/v1"
+chat_model = ChatOpenAI(openai_api_key = "aaabbbcccdddeeefffedddsfasdfasdf", 
+    openai_api_base = openai_api_base_address,
+    model_name = "vicuna-7b") """
+
 from langchain.schema import HumanMessage
 
 text = "What would be a good company name for a company that makes colorful socks?"
