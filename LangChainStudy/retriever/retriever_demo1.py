@@ -37,7 +37,7 @@ prompt = ChatPromptTemplate.from_template(template)
 
 from langchain.chat_models import ChatOpenAI
 
-openai_api_base_address = "http://192.168.3.84:20000/v1"
+openai_api_base_address = "http://172.23.115.108:20000/v1"
 
 chat_model = ChatOpenAI(openai_api_key = "aaabbbcccdddeeefffedddsfasdfasdf", 
     openai_api_base = openai_api_base_address,
