@@ -12,12 +12,13 @@ documents = text_splitter.split_documents(raw_documents)
 
 from langchain.embeddings import LocalAIEmbeddings
 
-openai_api_base_address = "http://172.23.115.108:20000/v1"
+# openai_api_base_address = "http://172.23.115.108:20000/v1"
+openai_api_base_address = "http://127.0.0.1:20000/v1"
 
 # 这个可以工作，使用服务化embedding模型
 embedding_model=LocalAIEmbeddings(openai_api_key = "aaabbbcccdddeeefffedddsfasdfasdf",  
                             openai_api_base = openai_api_base_address,
-                            model = "vicuna-13b-v1.5")
+                            model = "chatglm3-6b-32k") # "vicuna-13b-v1.5"
 
 db = Chroma.from_documents(documents, embedding_model)
 
