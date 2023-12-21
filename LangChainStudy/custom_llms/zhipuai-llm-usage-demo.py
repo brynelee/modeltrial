@@ -1,6 +1,7 @@
 import zhipuai
+import os
 
-zhipuai.api_key = "asdflkjasybalfkaskdfhoiaushdfoinkwer.fashdfiuaksjdnr"
+zhipuai.api_key = os.environ["ZHIPUAI_API_KEY"]
 response = zhipuai.model_api.invoke(
     model="chatglm_turbo",
     prompt=[

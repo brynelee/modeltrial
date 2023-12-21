@@ -1,7 +1,7 @@
 from langchain.llms import OpenAI
 from langchain.chat_models import ChatOpenAI
 
-from llms import (load_api, Zhipuai_LLM)
+from custom_llms import (load_api, Zhipuai_LLM)
 
 api_key = load_api()
 # print(api_key)
