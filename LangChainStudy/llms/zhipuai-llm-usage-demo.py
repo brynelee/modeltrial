@@ -1,6 +1,6 @@
 import zhipuai
 
-zhipuai.api_key = "0de81c20cb9e8f5677b5282963404b5f.dTwvxLRmTZqPz2Jv"
+zhipuai.api_key = "asdflkjasybalfkaskdfhoiaushdfoinkwer.fashdfiuaksjdnr"
 response = zhipuai.model_api.invoke(
     model="chatglm_turbo",
     prompt=[

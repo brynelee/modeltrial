@@ -149,9 +149,9 @@ class Zhipuai_LLM(LLM):
         return response_payload["data"]["choices"][-1]["content"].strip('"').strip(" ")
     
 
-
-api_key = load_api()
-# print(api_key)
-llm = Zhipuai_LLM(zhipuai_api_key=api_key)
-print(llm("给我讲段笑话")) 
+if __name__ == "__main__":
+    api_key = load_api()
+    # print(api_key)
+    llm = Zhipuai_LLM(zhipuai_api_key=api_key)
+    print(llm("给我讲段笑话")) 
 
