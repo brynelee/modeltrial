@@ -1,8 +1,9 @@
 import requests
 import readline
 
+# 这个是官方API说明，直接使用url访问方式，比较复杂，可参考custom_llms包对其的封装使用
+
 import os
-# key = os.environ["ZHIPUAI_API_KEY"]
 group_id = os.environ["MINIMAX_GROUPID"]
 api_key = os.environ["MINIMAX_API_KEY"]
 
