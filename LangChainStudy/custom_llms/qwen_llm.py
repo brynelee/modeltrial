@@ -6,9 +6,6 @@ import dashscope
 from dashscope import Generation  
 import os
 import json  
-  
-dashscope.api_key = os.environ["DASHSCOPE_API_KEY"] 
-  
 
 class DashLLM(LLM):  
     model:str = "qwen-turbo"
@@ -25,7 +22,8 @@ class DashLLM(LLM):
             stop: Optional[List[str]] = None,  
             run_manager: Optional[CallbackManagerForLLMRun] = None,  
             **kwargs: Any,  
-    ) -> str:  
+    ) -> str:
+        dashscope.api_key = os.environ["DASHSCOPE_API_KEY"]   
         if stop is not None:  
             raise ValueError("stop kwargs are not permitted.")  
         response = Generation.call(  
