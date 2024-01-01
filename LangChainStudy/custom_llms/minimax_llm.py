@@ -1,4 +1,4 @@
-from model_config import CHAT_CONFIG
+from .model_config import CHAT_CONFIG
 import sys
 import os
 from typing import Mapping, Any, List, Optional

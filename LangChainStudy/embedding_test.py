@@ -14,6 +14,16 @@ embedding_model = HuggingFaceEmbeddings(model_name = "BAAI/bge-large-zh")
 
 print("ok")
 
+import os
+from langchain.embeddings import DashScopeEmbeddings
+
+ 
+embeddings = DashScopeEmbeddings(
+    model="text-embedding-v1", dashscope_api_key=os.environ["DASHSCOPE_API_KEY"]
+)
+
+print("dashscope embeddings ok")
+
 """ from langchain.embeddings import LocalAIEmbeddings
 
 openai_api_base_address = "http://172.23.115.108:20000/v1"
