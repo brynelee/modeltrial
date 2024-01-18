@@ -31,12 +31,14 @@ from autogen import AssistantAgent, UserProxyAgent, config_list_from_json
 
 # config_list = config_list_from_json(env_or_file="OAI_CONFIG_LIST")
 
-
+# ollama serve
+# ollama list
+# litellm --model ollama/llama2
 config_list = [
     {
-        "base_url": "http://0.0.0.0:8000",
+        "base_url": "http://127.0.0.1:8000",
         "api_key": "NULL",
-        "model": "ollama/mixtral",
+        "model": "ollama/codellama:13b",
     }
 ]
 
@@ -59,8 +61,18 @@ user_proxy = UserProxyAgent(
     system_message="""Reply TERMINATE if the task has been solved with full satisfaction. Otherwise, reply CONTINUE, or the reason why the task is not solved yet."""
 ) 
 task="""
-draw me a picture of a handsome boy.
+
+Plot a chart of NVDA and TESLA stock price for 2023. Save the result to a file named nvda_tesla.png
+
 """
+
+
 user_proxy.initiate_chat(assistant, message=task)
 # This initiates an automated chat between the two agents to solve the task
 
+
+# draw me a picture of a handsome boy.
+# Plot a chart of NVDA and TESLA stock price for 2023. Save the result to a file named nvda_tesla.png
+# Write a python script to plot a sine wave and save it to disc as a png file sine_wave.png
+# List out the top 5 rivers in africa and their length and return that as a markdown table. Do not try to write any code, just write the table
+# Write a python function to calculate the square root of a number, and call it with the number 4.
