@@ -1,3 +1,4 @@
+from typing import Tuple
 import torch
 from common import *
 
@@ -65,8 +66,52 @@ def reshape_for_broadcast(freqs_cis: torch.Tensor, x: torch.Tensor):
         print(i,d)
     return freqs_cis.view(*shape)
 
-input_tensor = torch.ones(10,1024,20, 15, 32)
-print(input_tensor)
+# input_tensor = torch.ones(10, 512, 12, 64)
+# print(input_tensor)
 
-result = reshape_for_broadcast(freqs_cis_result, input_tensor)
-print("result is: ", result, " result shape is: ",result.shape)
+# result = reshape_for_broadcast(freqs_cis_result, input_tensor)
+# print("result is: ", result, " result shape is: ",result.shape)
+
+
+# 假设 batch_size为2 seq_len固定为512 attention_head的数量为12 每个attention_head的维度为64，那么，对于输入到multi-head attn中的输入x_q的尺寸就是 (2, 512, 12, 64)
+# 而freqs_cis其实就是需要计算出来的m\theta也就是跟绝对位置相关的旋转的角度，在极坐标下对应的复数tensor
+# 而precompute_freqs_cis就是提前将这些旋转角度对应的tensor给创建出来，并可以重复利用。
+# 因为确定了序列的最大长度，所以这个tensor是固定死的。
+# 根据后续的数据流我们可以发现，在调用该函数时，传入的两个参数分别是attention_head的维度，以及最大长度的两倍，
+# 具象地，也就是64和1024
+def apply_rotary_emb(
+    xq: torch.Tensor,
+    xk: torch.Tensor,
+    freqs_cis: torch.Tensor,
+) -> Tuple[torch.Tensor, torch.Tensor]:
+    # torch.view_as_complex是把一个tensor转为复数形式
+    # 比如torch.view_as_complex(torch.Tensor([[1, 2], [3, 4], [5, 6]]))
+    # tensor([1.+2.j, 3.+4.j, 5.+6.j])
+    
+    # 假设输入x_q的尺寸就是(2, 512, 12, 64)
+    # 那么这一句操作的reshape，就是把它变成(2, 512, 12, -1, 2)，也就是(2, 512, 12, 32, 2)。x_k同理，略
+    # 紧接着把它变成复数形式，也就是变成了(2, 512, 12, 32)的形状。
+    xq_ = torch.view_as_complex(xq.float().reshape(*xq.shape[:-1], -1, 2))
+    xk_ = torch.view_as_complex(xk.float().reshape(*xk.shape[:-1], -1, 2))
+    # 把freqs_cis变成和输入的tensor xq_相同的形状
+    freqs_cis = reshape_for_broadcast(freqs_cis, xq_)
+    # torch.view_as_real是把复数tensor变回实数
+    # torch.view_as_real(torch.view_as_complex(torch.Tensor([[1, 2], [3, 4], [5, 6]])))
+    # tensor([[1., 2.],
+    #         [3., 4.],
+    #         [5., 6.]])
+    # reshape之后，就是将位置信息融入query和key中
+    # 这一步将二者相乘得到的复数tensor，重新转换为实数形式，得到的shape为(2, 512, 12, 32, 2)
+    # 然后再flatten成(2, 512, 12, 64)，这样一来，就变回了和最开始x_q相同的形状，也就完成了将位置信息融入到x_q的这一操作，x_k同理
+    xq_out = torch.view_as_real(xq_ * freqs_cis).flatten(3)
+    xk_out = torch.view_as_real(xk_ * freqs_cis).flatten(3)
+    return xq_out.type_as(xq), xk_out.type_as(xk)
+
+xq = torch.randn(2, 1024, 12, 64)
+xk = torch.randn(2, 1024, 12, 64)
+
+xq_output, xk_output = apply_rotary_emb(xq, xk, freqs_cis_result)
+
+print("xq is: ", xq, "shape is: ", xq.shape)
+print("xk is: ", xk, "shape is: ", xk.shape)
+
